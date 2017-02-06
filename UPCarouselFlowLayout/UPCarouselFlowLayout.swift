@@ -28,6 +28,8 @@ public class UPCarouselFlowLayout: UICollectionViewFlowLayout {
     @IBInspectable public var sideItemScale: CGFloat = 0.6
     @IBInspectable public var sideItemAlpha: CGFloat = 0.6
     @IBInspectable public var sideItemShift: CGFloat = 0.0
+    public var scrollDecelerationRate: CGFloat = UIScrollViewDecelerationRateFast
+    public var canScrollMultiItems: Bool = false
     public var spacingMode = UPCarouselFlowLayoutSpacingMode.fixed(spacing: 40)
     
     private var state = LayoutState(size: CGSize.zero, direction: .Horizontal)
@@ -47,8 +49,8 @@ public class UPCarouselFlowLayout: UICollectionViewFlowLayout {
     
     private func setupCollectionView() {
         guard let collectionView = self.collectionView else { return }
-        if collectionView.decelerationRate != UIScrollViewDecelerationRateFast {
-            collectionView.decelerationRate = UIScrollViewDecelerationRateFast
+        if collectionView.decelerationRate != scrollDecelerationRate {
+            collectionView.decelerationRate = scrollDecelerationRate
         }
     }
     
@@ -118,13 +120,17 @@ public class UPCarouselFlowLayout: UICollectionViewFlowLayout {
             return super.targetContentOffsetForProposedContentOffset(proposedContentOffset)
         }
 
-        let targetRect = CGRect(x: proposedContentOffset.x, y: 0.0, width: collectionView.bounds.width, height: collectionView.bounds.height)
+        let isHorizontal = (self.scrollDirection == .Horizontal)
+        var targetRect = collectionView.bounds
+
+        if canScrollMultiItems {
+            targetRect.origin = isHorizontal ? CGPoint(x: proposedContentOffset.x, y: 0.0) : CGPoint(x: 0.0, y: proposedContentOffset.y)
+        }
 
         guard let layoutAttributes = self.layoutAttributesForElementsInRect(targetRect) else {
             return super.targetContentOffsetForProposedContentOffset(proposedContentOffset)
         }
-        let isHorizontal = (self.scrollDirection == .Horizontal)
-        
+
         let midSide = (isHorizontal ? collectionView.bounds.size.width : collectionView.bounds.size.height) / 2
         let proposedContentOffsetCenterOrigin = (isHorizontal ? proposedContentOffset.x : proposedContentOffset.y) + midSide
         
