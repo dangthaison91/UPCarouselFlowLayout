@@ -14,20 +14,20 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     @IBOutlet weak var detailLabel: UILabel!
     @IBOutlet weak var collectionView: UICollectionView!
     
-    fileprivate var items = [Character]()
+    private var items = [Character]()
     
-    fileprivate var currentPage: Int = 0 {
+    private var currentPage: Int = 0 {
         didSet {
             let character = self.items[self.currentPage]
-            self.infoLabel.text = character.name.uppercased()
-            self.detailLabel.text = character.movie.uppercased()
+            self.infoLabel.text = character.name.uppercaseString
+            self.detailLabel.text = character.movie.uppercaseString
         }
     }
     
-    fileprivate var pageSize: CGSize {
+    private var pageSize: CGSize {
         let layout = self.collectionView.collectionViewLayout as! UPCarouselFlowLayout
         var pageSize = layout.itemSize
-        if layout.scrollDirection == .horizontal {
+        if layout.scrollDirection == .Horizontal {
             pageSize.width += layout.minimumLineSpacing
         } else {
             pageSize.height += layout.minimumLineSpacing
@@ -35,8 +35,8 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         return pageSize
     }
     
-    fileprivate var orientation: UIDeviceOrientation {
-        return UIDevice.current.orientation
+    private var orientation: UIDeviceOrientation {
+        return UIDevice.currentDevice().orientation
     }
     
     
@@ -48,15 +48,16 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
         
         self.currentPage = 0
         
-        NotificationCenter.default.addObserver(self, selector: #selector(ViewController.rotationDidChange), name: NSNotification.Name.UIDeviceOrientationDidChange, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ViewController.rotationDidChange), name: UIDeviceOrientationDidChangeNotification, object: nil)
     }
     
-    fileprivate func setupLayout() {
+    private func setupLayout() {
         let layout = self.collectionView.collectionViewLayout as! UPCarouselFlowLayout
         layout.spacingMode = UPCarouselFlowLayoutSpacingMode.overlap(visibleOffset: 30)
+        layout.sideItemShift = 70.0
     }
     
-    fileprivate func createItems() -> [Character] {
+    private func createItems() -> [Character] {
         let characters = [
             Character(imageName: "wall-e", name: "Wall-E", movie: "Wall-E"),
             Character(imageName: "nemo", name: "Nemo", movie: "Finding Nemo"),
@@ -69,49 +70,50 @@ class ViewController: UIViewController, UICollectionViewDelegate, UICollectionVi
     }
     
     
-    @objc fileprivate func rotationDidChange() {
+    @objc private func rotationDidChange() {
         guard !orientation.isFlat else { return }
         let layout = self.collectionView.collectionViewLayout as! UPCarouselFlowLayout
-        let direction: UICollectionViewScrollDirection = UIDeviceOrientationIsPortrait(orientation) ? .horizontal : .vertical
+        let direction: UICollectionViewScrollDirection =  UIDeviceOrientationIsPortrait(orientation) ? .Horizontal : .Vertical
         layout.scrollDirection = direction
         if currentPage > 0 {
-            let indexPath = IndexPath(item: currentPage, section: 0)
-            let scrollPosition: UICollectionViewScrollPosition = UIDeviceOrientationIsPortrait(orientation) ? .centeredHorizontally : .centeredVertically
-            self.collectionView.scrollToItem(at: indexPath, at: scrollPosition, animated: false)
+            let indexPath = NSIndexPath(forItem: currentPage, inSection: 0)
+            let scrollPosition: UICollectionViewScrollPosition = UIDeviceOrientationIsPortrait(orientation) ? .CenteredHorizontally : .CenteredVertically
+            self.collectionView.scrollToItemAtIndexPath(indexPath, atScrollPosition: scrollPosition, animated: false)
         }
     }
     
     // MARK: - Card Collection Delegate & DataSource
-    
-    func numberOfSections(in collectionView: UICollectionView) -> Int {
+
+    func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
         return 1
     }
-    
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+
+    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return items.count
     }
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CarouselCollectionViewCell.identifier, for: indexPath) as! CarouselCollectionViewCell
+
+
+     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCellWithReuseIdentifier(CarouselCollectionViewCell.identifier, forIndexPath: indexPath) as! CarouselCollectionViewCell
         let character = items[(indexPath as NSIndexPath).row]
         cell.image.image = UIImage(named: character.imageName)
         return cell
     }
     
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         let character = items[(indexPath as NSIndexPath).row]
-        let alert = UIAlertController(title: character.name, message: nil, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-        present(alert, animated: true, completion: nil)
+        let alert = UIAlertController(title: character.name, message: nil, preferredStyle: .Alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .Default, handler: nil))
+        presentViewController(alert, animated: true, completion: nil)
     }
 
     
     // MARK: - UIScrollViewDelegate
     
-    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        let layout = self.collectionView.collectionViewLayout as! UPCarouselFlowLayout
-        let pageSide = (layout.scrollDirection == .horizontal) ? self.pageSize.width : self.pageSize.height
-        let offset = (layout.scrollDirection == .horizontal) ? scrollView.contentOffset.x : scrollView.contentOffset.y
+    func scrollViewDidEndDecelerating(scrollView: UIScrollView) {
+    let layout = self.collectionView.collectionViewLayout as! UPCarouselFlowLayout
+        let pageSide = (layout.scrollDirection == .Horizontal) ? self.pageSize.width : self.pageSize.height
+        let offset = (layout.scrollDirection == .Horizontal) ? scrollView.contentOffset.x : scrollView.contentOffset.y
         currentPage = Int(floor((offset - pageSide / 2) / pageSide) + 1)
     }
 
